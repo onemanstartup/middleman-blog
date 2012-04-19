@@ -30,104 +30,11 @@ module Middleman
             set :blog_month_template, blog_calendar_template
             set :blog_day_template, blog_calendar_template
           end
-
-          matcher = Regexp.escape(blog_sources).
-            sub(/^\//, "").
-            sub(":year",  "(\\d{4})").
-            sub(":month", "(\\d{2})").
-            sub(":day",   "(\\d{2})").
-            sub(":title", "(.*)")
-
-          path_matcher = /^#{matcher}/
-          file_matcher = /^#{source_dir}\/#{matcher}/
-
-          sitemap.reroute do |destination, page|
-            if page.path =~ path_matcher
-              # This doesn't allow people to omit one part!
-              year = $1
-              month = $2
-              day = $3
-              title = $4
-
-              # compute output path:
-              #   substitute date parts to path pattern
-              #   get date from frontmatter, path
-              blog_permalink.
-                sub(':year', year).
-                sub(':month', month).
-                sub(':day', day).
-                sub(':title', title)
-            else
-              destination
-            end
-          end
-
-          frontmatter_changed file_matcher do |file|
-            blog.touch_file(file)
-          end
-
-          self.files.deleted file_matcher do |file|
-            self.blog.remove_file(file)
-          end
-
-          provides_metadata file_matcher do
-            {
-              :options => {
-                :layout => blog_layout
-              }
-            }
-          end
-        end
-
-        app.ready do
-          # Set up tag pages if the tag template has been specified
-          if defined? blog_tag_template
-            page blog_tag_template, :ignore => true
-
-            blog.tags.each do |tag, articles|
-              page tag_path(tag), :proxy => blog_tag_template do
-                @tag = tag
-                @articles = articles
-              end
-            end
-          end
-
-          # Set up date pages if the appropriate templates have been specified
-          blog.articles.group_by {|a| a.date.year }.each do |year, year_articles|
-            if defined? blog_year_template
-              page blog_year_template, :ignore => true
-
-              page blog_year_path(year), :proxy => blog_year_template do
-                @year = year
-                @articles = year_articles
-              end
-            end
-            
-            year_articles.group_by {|a| a.date.month }.each do |month, month_articles|
-              if defined? blog_month_template
-                page blog_month_template, :ignore => true
-
-                page blog_month_path(year, month), :proxy => blog_month_template do
-                  @year = year
-                  @month = month
-                  @articles = month_articles
-                end
-              end
-              
-              month_articles.group_by {|a| a.date.day }.each do |day, day_articles|
-                if defined? blog_day_template
-                  page blog_day_template, :ignore => true
-
-                  page blog_day_path(year, month, day), :proxy => blog_day_template do
-                    @year = year
-                    @month = month
-                    @day = day
-                    @articles = day_articles
-                  end
-                end
-              end
-            end
-          end
+          
+          sitemap.register_resource_list_manipulator(
+            :blog,
+            blog
+          )
         end
       end
       alias :included :registered
