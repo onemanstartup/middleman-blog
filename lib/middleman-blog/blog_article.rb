@@ -33,6 +33,12 @@ module Middleman
         data["title"]
       end
 
+      # The language of the article, set from frontmatter
+      # @return [String]
+      def lang
+        data["lang"]
+      end
+
       # Whether or not this article has been published
       #
       # An article is considered published in the following scenarios:
@@ -154,7 +160,7 @@ module Middleman
       def previous_article
         app.blog.articles.find {|a| a.date < self.date }
       end
-      
+
       # The next (chronologically later) article after this one
       # or nil if this is the most recent article.
       # @return [Middleman::Sitemap::Resource]

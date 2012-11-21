@@ -26,6 +26,7 @@ module Middleman
         
         matcher = Regexp.escape(options.sources).
             sub(/^\//, "").
+            sub(":lang",  "(\\w{2})").
             sub(":year",  "(\\d{4})").
             sub(":month", "(\\d{2})").
             sub(":day",   "(\\d{2})").
@@ -38,7 +39,7 @@ module Middleman
 
         # Build a hash of part name to capture index, e.g. {"year" => 0}
         @matcher_indexes = {}
-        options.sources.scan(/:year|:month|:day|:title/).
+        options.sources.scan(/:lang|:year|:month|:day|:title/).
           each_with_index do |key, i|
             @matcher_indexes[key[1..-1]] = i
           end
@@ -99,6 +100,7 @@ module Middleman
             # compute output path:
             #   substitute date parts to path pattern
             resource.destination_path = options.permalink.
+              sub(':lang', resource.lang.to_s).
               sub(':year', resource.date.year.to_s).
               sub(':month', resource.date.month.to_s.rjust(2,'0')).
               sub(':day', resource.date.day.to_s.rjust(2,'0')).
@@ -112,6 +114,7 @@ module Middleman
             match = $~.captures
 
             article_path = options.sources.
+              sub(':lang', match[@matcher_indexes["lang"]]).
               sub(':year', match[@matcher_indexes["year"]]).
               sub(':month', match[@matcher_indexes["month"]]).
               sub(':day', match[@matcher_indexes["day"]]).
@@ -127,6 +130,7 @@ module Middleman
             # The subdir path is the article path with the index file name
             # or file extension stripped off.
             resource.destination_path = options.permalink.
+              sub(':lang', resource.lang.to_s).
               sub(':year', article.date.year.to_s).
               sub(':month', article.date.month.to_s.rjust(2,'0')).
               sub(':day', article.date.day.to_s.rjust(2,'0')).
