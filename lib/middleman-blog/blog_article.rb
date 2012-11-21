@@ -36,7 +36,11 @@ module Middleman
       # The language of the article, set from frontmatter
       # @return [String]
       def lang
-        data["lang"]
+        if app.blog.options.sources.include?(":lang")
+          path_part("lang")
+        else
+          data["lang"]
+        end
       end
 
       # Whether or not this article has been published
